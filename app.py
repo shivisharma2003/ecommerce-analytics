@@ -474,12 +474,13 @@ with tab2:
     seg_summary['Revenue_Share'] = (seg_summary['Total_Revenue'] / seg_summary['Total_Revenue'].sum() * 100).round(1)
 
     st.markdown("<div class='section-header'>Segment Deep Dive</div>", unsafe_allow_html=True)
-    st.dataframe(
-        seg_summary.style
-            .format({'Avg_Recency':'{:.0f}d','Avg_Orders':'{:.2f}','Avg_Revenue':'R$ {:.0f}','Total_Revenue':'R$ {:.0f}','Revenue_Share':'{:.1f}%'})
-            .background_gradient(subset=['Total_Revenue'], cmap='Blues'),
-        use_container_width=True, hide_index=True
-    )
+    seg_display = seg_summary.copy()
+    seg_display['Avg_Recency']    = seg_display['Avg_Recency'].map('{:.0f}d'.format)
+    seg_display['Avg_Orders']     = seg_display['Avg_Orders'].map('{:.2f}'.format)
+    seg_display['Avg_Revenue']    = seg_display['Avg_Revenue'].map('R$ {:.0f}'.format)
+    seg_display['Total_Revenue']  = seg_display['Total_Revenue'].map('R$ {:.0f}'.format)
+    seg_display['Revenue_Share']  = seg_display['Revenue_Share'].map('{:.1f}%'.format)
+    st.dataframe(seg_display, use_container_width=True, hide_index=True)
 
     champions    = rfm[rfm['Segment']=='Champions']
     champ_pct    = len(champions)/len(rfm)*100
@@ -673,11 +674,9 @@ with tab5:
     top20 = clv_data.nlargest(20,'CLV_12m')[['customer_unique_id','frequency','avg_order','CLV_12m','churn_prob','CLV_Tier']].copy()
     top20['customer_unique_id'] = top20['customer_unique_id'].str[:12] + '...'
     top20.columns = ['Customer ID','Orders','Avg Order (R$)','12M CLV (R$)','Churn Risk','Tier']
-    st.dataframe(
-        top20.style
-            .format({'Avg Order (R$)':'R$ {:.0f}','12M CLV (R$)':'R$ {:.0f}','Churn Risk':'{:.1%}'})
-            .background_gradient(subset=['12M CLV (R$)'], cmap='Blues'),
-        use_container_width=True, hide_index=True
-    )
+    top20['Avg Order (R$)'] = top20['Avg Order (R$)'].map('R$ {:.0f}'.format)
+    top20['12M CLV (R$)']   = top20['12M CLV (R$)'].map('R$ {:.0f}'.format)
+    top20['Churn Risk']     = top20['Churn Risk'].map('{:.1%}'.format)
+    st.dataframe(top20, use_container_width=True, hide_index=True)
 
     insight(f"The top 25% of customers by CLV account for a disproportionate share of projected 12-month revenue. <b>High-Value customers</b> with churn probability above 60% should be the first target for a re-engagement campaign — they represent recoverable revenue. <b>Model approach:</b> BG/NBD-inspired proxy using purchase rate × avg order value × retention probability over a 12-month horizon.")
